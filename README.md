@@ -39,7 +39,7 @@ xtr-ballistics/
 
 ---
 
-## 🎨 Adding Your Friend's Assets
+## 🎨 Adding blender's Assets
 
 ### GIFs (Showcase Section)
 - Export Blender renders as GIF
