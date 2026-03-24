@@ -1,38 +1,155 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>XTR Ballistics</title>
-  <link rel="stylesheet" href="css/style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>XTR — BALLISTICS</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
 
-<!-- LOADER -->
-<div id="loader">
-  <canvas id="loaderCanvas"></canvas>
-</div>
-
-<!-- HERO -->
-<section id="hero">
-  <div class="logo">
-    <span class="x">X</span>
-    <span class="tr">TR</span>
+  <!-- LOADER SCREEN -->
+  <div id="loader">
+    <canvas id="loader-canvas"></canvas>
+    <div id="loader-text">
+      <span class="loader-sub">INITIALIZING</span>
+      <div class="loader-bar-wrap"><div id="loader-bar"></div></div>
+    </div>
   </div>
-</section>
 
-<!-- CINEMATIC -->
-<section class="shot">
-  <video src="assets/video/shot1.mp4" autoplay muted loop></video>
-</section>
+  <!-- MAIN CONTENT -->
+  <main id="main" class="hidden">
 
-<section class="shot">
-  <video src="assets/video/shot2.mp4" autoplay muted loop></video>
-</section>
+    <!-- HERO SECTION -->
+    <section id="hero">
+      <canvas id="bg-canvas"></canvas>
 
-<section class="shot gif-shot">
-  <img src="assets/gifs/preview.png" data-gif="assets/gifs/anim.gif">
-</section>
+      <div id="logo-wrap">
+        <div id="logo">
+          <canvas id="slash-canvas"></canvas>
+          <div id="logo-text">
+            <span id="logo-x">X</span><span id="logo-tr">TR</span>
+          </div>
+        </div>
+        <div id="logo-sub">— BALLISTICS —</div>
+        <div id="tagline">ENGINEERED FOR IMPACT</div>
+      </div>
 
-<script src="js/main.js"></script>
+      <div id="scroll-hint">
+        <span>SCROLL</span>
+        <div class="scroll-line"></div>
+      </div>
+    </section>
+
+    <!-- ABOUT SECTION -->
+    <section id="about">
+      <div class="section-inner">
+        <div class="section-label">// 001 — ORIGIN</div>
+        <h2 class="section-title">BORN FROM<br/><em>PRECISION</em></h2>
+        <div class="about-grid">
+          <div class="about-card">
+            <div class="card-icon">◈</div>
+            <h3>ENGINEERED</h3>
+            <p>Every round forged with uncompromising precision. No tolerances. No excuses.</p>
+          </div>
+          <div class="about-card">
+            <div class="card-icon">◈</div>
+            <h3>LETHAL</h3>
+            <p>Ballistic performance that redefines the ceiling. XTR sets the standard others chase.</p>
+          </div>
+          <div class="about-card">
+            <div class="card-icon">◈</div>
+            <h3>DOMINANT</h3>
+            <p>Built for those who demand superiority in every engagement, every time.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SHOWCASE / GIF SECTION -->
+    <section id="showcase">
+      <div class="section-inner">
+        <div class="section-label">// 002 — SHOWCASE</div>
+        <h2 class="section-title">WITNESS<br/><em>THE ARSENAL</em></h2>
+        <div class="showcase-grid">
+          <!-- GIF cards — drop your GIFs in assets/gifs/ and update src -->
+          <div class="gif-card" data-gif="assets/gifs/product1.gif">
+            <div class="gif-frame">
+              <img class="gif-still" src="assets/gifs/product1.gif" alt="Product 01" />
+              <div class="gif-overlay">
+                <span class="gif-label">HOVER TO ACTIVATE</span>
+              </div>
+            </div>
+            <div class="gif-info">
+              <span class="gif-code">XTR — 01</span>
+              <span class="gif-desc">PLACEHOLDER — REPLACE WITH BLENDER RENDER</span>
+            </div>
+          </div>
+          <div class="gif-card" data-gif="assets/gifs/product2.gif">
+            <div class="gif-frame">
+              <img class="gif-still" src="assets/gifs/product2.gif" alt="Product 02" />
+              <div class="gif-overlay">
+                <span class="gif-label">HOVER TO ACTIVATE</span>
+              </div>
+            </div>
+            <div class="gif-info">
+              <span class="gif-code">XTR — 02</span>
+              <span class="gif-desc">PLACEHOLDER — REPLACE WITH BLENDER RENDER</span>
+            </div>
+          </div>
+          <div class="gif-card" data-gif="assets/gifs/product3.gif">
+            <div class="gif-frame">
+              <img class="gif-still" src="assets/gifs/product3.gif" alt="Product 03" />
+              <div class="gif-overlay">
+                <span class="gif-label">HOVER TO ACTIVATE</span>
+              </div>
+            </div>
+            <div class="gif-info">
+              <span class="gif-code">XTR — 03</span>
+              <span class="gif-desc">PLACEHOLDER — REPLACE WITH BLENDER RENDER</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIDEO SECTION — drop Blender video exports here -->
+    <section id="reel">
+      <div class="section-inner">
+        <div class="section-label">// 003 — IN MOTION</div>
+        <h2 class="section-title">FEEL THE<br/><em>FORCE</em></h2>
+        <div class="video-wrap">
+          <!-- Replace src with your Blender video export -->
+          <video id="reel-video" autoplay muted loop playsinline poster="assets/images/reel-poster.jpg">
+            <source src="assets/video/reel.mp4" type="video/mp4" />
+            <source src="assets/video/reel.webm" type="video/webm" />
+          </video>
+          <div class="video-border-tl"></div>
+          <div class="video-border-br"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer id="footer">
+      <canvas id="footer-canvas"></canvas>
+      <div class="footer-inner">
+        <div class="footer-logo">
+          <span class="f-x">X</span><span class="f-tr">TR</span>
+        </div>
+        <div class="footer-tag">— BALLISTICS —</div>
+        <div class="footer-line"></div>
+        <p class="footer-copy">© 2025 XTR BALLISTICS. ALL RIGHTS RESERVED.</p>
+      </div>
+    </footer>
+
+  </main>
+
+  <script src="js/loader.js"></script>
+  <script src="js/logo.js"></script>
+  <script src="js/gif-hover.js"></script>
+  <script src="js/bg.js"></script>
 </body>
 </html>
