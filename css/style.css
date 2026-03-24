@@ -1,0 +1,55 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  background: black;
+  color: white;
+  font-family: Arial, sans-serif;
+}
+
+#loader {
+  position: fixed;
+  width: 100%;
+  height: 100vh;
+  background: black;
+  z-index: 999;
+}
+
+#hero {
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.logo {
+  font-size: 80px;
+  letter-spacing: 10px;
+}
+
+.x {
+  color: #9D00FF;
+  opacity: 0;
+}
+
+.tr {
+  opacity: 0;
+}
+
+.shot {
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.gif-shot img {
+  width: 60%;
+  opacity: 0.8;
+}
