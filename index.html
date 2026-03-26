@@ -9,41 +9,37 @@
   <link rel="stylesheet" href="css/style.css"/>
 </head>
 <body>
+
+  <!-- Custom cursor -->
+  <div id="cursor"></div>
+  <div id="cursor-trail"></div>
+
   <div id="stage">
 
-    <!-- MASTER BACKGROUND CANVAS -->
+    <!-- Single master canvas — Lissajous live here always -->
     <canvas id="bg-canvas"></canvas>
 
-    <!-- SCENE: LOADER -->
-    <div class="scene active" id="scene-loader">
-      <div id="loader-ui">
-        <span id="loader-label">INITIALIZING XTR DYNAMICS</span>
-        <div id="loader-bar-wrap"><div id="loader-bar"></div></div>
+    <!-- Logo canvas — XTR slashes draw here on top -->
+    <canvas id="logo-canvas"></canvas>
+
+    <!-- DYNAMICS text — fades in with XTR as one unit -->
+    <div id="brand-unit">
+      <div id="brand-xtr">
+        <span id="bx">X</span><span id="bt">T</span><span id="br">R</span>
       </div>
+      <div id="brand-dynamics">DYNAMICS</div>
     </div>
 
-    <!-- SCENE: LOGO -->
-    <div class="scene" id="scene-logo">
-      <div id="logo-stage">
-        <canvas id="logo-canvas"></canvas>
-        <div id="dynamics-text">DYNAMICS</div>
-      </div>
-    </div>
-
-    <!-- SCENE: MISSILE (only shown if asset exists) -->
+    <!-- MISSILE SCENE -->
     <div class="scene" id="scene-missile">
       <div id="missile-inner">
         <div id="missile-label">PROTOTYPE — MK1</div>
         <div id="missile-frame">
           <!--
-            REPLACE THIS COMMENT WITH YOUR BLENDER EXPORT:
+            DROP YOUR BLENDER EXPORT HERE:
 
-            Video (recommended):
-            <video src="assets/video/missile-rotate.mp4" autoplay muted loop playsinline></video>
-
-            Image:-->
-            <img src="assets/images/image.png" alt="XTR MK1"/>
-          
+            Video: <video src="assets/video/missile-rotate.mp4" autoplay muted loop playsinline></video>
+          -->  Image: <img src="assets/images/image.png" alt="XTR MK1"/>
         </div>
         <div id="missile-specs">
           <span class="spec">DESIGNATION <em>XTR-MK1</em></span>
@@ -55,17 +51,18 @@
       </div>
     </div>
 
-    <!-- SCENE: END CARD -->
+    <!-- END CARD -->
     <div class="scene" id="scene-end">
       <div id="end-inner">
         <div id="end-xtr">
-          <span id="end-x">X</span><span id="end-tr">TR</span>
+          <span id="ex">X</span><span id="etr">TR</span>
         </div>
         <div id="end-credit">© REKOILE MEDIA PRODUCTIONS. ALL RIGHTS RESERVED.</div>
       </div>
     </div>
 
   </div>
+
   <script src="js/ad.js"></script>
 </body>
 </html>
