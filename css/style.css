@@ -1,19 +1,18 @@
-/* =============================================
-   XTR DYNAMICS — CINEMATIC AD STYLESHEET
-   Theme: Void Black + Violet / Purple Tron
-   ============================================= */
+/* XTR DYNAMICS — CINEMATIC AD CSS */
 
 :root {
-  --black:        #000000;
-  --deep:         #05000a;
-  --violet:       #9D00FF;
-  --violet-mid:   #BF5FFF;
-  --violet-pale:  #E0AAFF;
-  --white:        #F0F0F0;
-  --dim:          #666;
-  --glow-sm:      0 0 8px #9D00FF, 0 0 20px #9D00FF44;
-  --glow-md:      0 0 14px #9D00FF, 0 0 40px #9D00FF66, 0 0 80px #9D00FF22;
-  --glow-lg:      0 0 24px #BF5FFF, 0 0 70px #9D00FF99, 0 0 140px #9D00FF33;
+  --black:   #000000;
+  --cyan:    #00FFFF;
+  --fuchsia: #FF00FF;
+  --violet:  #9D00FF;
+  --vpale:   #E0AAFF;
+  --white:   #F5F5F5;
+  --dim:     #555;
+
+  --glow-cyan:    0 0 10px #00FFFF, 0 0 30px #00FFFF88, 0 0 60px #00FFFF33;
+  --glow-violet:  0 0 10px #9D00FF, 0 0 30px #9D00FF88, 0 0 70px #9D00FF33;
+  --glow-fuchsia: 0 0 10px #FF00FF, 0 0 30px #FF00FF88, 0 0 60px #FF00FF22;
+  --glow-mix:     0 0 14px #FF00FF, 0 0 40px #9D00FF99, 0 0 80px #00FFFF22;
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -22,12 +21,11 @@ html, body {
   width: 100%; height: 100%;
   overflow: hidden;
   background: #000;
+  font-family: 'Orbitron', monospace;
   cursor: none;
 }
 
-/* =============================================
-   STAGE — full screen, everything lives here
-   ============================================= */
+/* ── STAGE ── */
 #stage {
   position: fixed;
   inset: 0;
@@ -35,273 +33,174 @@ html, body {
   height: 100vh;
 }
 
-#main-canvas {
+#bg-canvas {
   position: absolute;
   inset: 0;
-  width: 100%;
-  height: 100%;
+  width: 100%; height: 100%;
   z-index: 0;
 }
 
-#overlay {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  pointer-events: none;
-}
-
-/* =============================================
-   SCENES
-   ============================================= */
+/* ── SCENES ── */
 .scene {
   position: absolute;
   inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: opacity 0.8s ease;
-  opacity: 1;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.9s ease;
+  z-index: 1;
 }
+.scene.active  { opacity: 1; pointer-events: all; }
+.scene.fade-in { opacity: 1; }
 
-.scene.hidden   { opacity: 0; pointer-events: none; }
-.scene.fade-out { opacity: 0; }
-.scene.fade-in  { opacity: 1; }
-
-/* =============================================
-   SCENE 1 — LOADER
-   ============================================= */
-#loader-text {
-  text-align: center;
-  font-family: 'Orbitron', monospace;
+/* ── LOADER ── */
+#loader-ui {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 20px;
+  gap: 22px;
 }
 
-.loader-sub {
-  font-size: clamp(10px, 1.5vw, 13px);
+#loader-label {
+  font-size: clamp(9px, 1.4vw, 13px);
   letter-spacing: 8px;
-  color: var(--violet-mid);
-  animation: pulse 1.4s ease infinite;
+  color: var(--cyan);
+  text-shadow: var(--glow-cyan);
+  animation: blinkPulse 1.3s ease infinite;
 }
 
-.loader-bar-wrap {
-  width: clamp(180px, 30vw, 280px);
+#loader-bar-wrap {
+  width: clamp(200px, 32vw, 320px);
   height: 2px;
-  background: #1a001a;
-  border: 1px solid #3a003a;
+  background: #0a001a;
+  border: 1px solid #1a004a;
   overflow: hidden;
 }
 
 #loader-bar {
   height: 100%;
   width: 0%;
-  background: linear-gradient(90deg, var(--violet), var(--violet-pale));
-  box-shadow: var(--glow-sm);
-  transition: width 0.08s linear;
+  background: linear-gradient(90deg, var(--violet), var(--cyan));
+  box-shadow: 0 0 10px #00FFFF, 0 0 20px #9D00FF;
+  transition: width 0.07s linear;
 }
 
-/* =============================================
-   SCENE 2 — LOGO
-   ============================================= */
-#logo-wrap {
+/* ── LOGO SCENE ── */
+#logo-stage {
   position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 20px;
+  gap: 18px;
 }
 
-#logo-canvas {
-  display: block;
-}
+#logo-canvas { display: block; }
 
-#logo-tagline {
-  font-family: 'Orbitron', monospace;
-  font-weight: 900;
-  font-size: clamp(14px, 3.5vw, 40px);
-  letter-spacing: clamp(10px, 3vw, 28px);
+#dynamics-text {
+  font-size: clamp(11px, 2.8vw, 32px);
+  letter-spacing: clamp(10px, 3vw, 26px);
   color: var(--white);
+  text-shadow: var(--glow-violet);
   opacity: 0;
-  transform: translateY(12px);
-  transition: opacity 0.7s ease, transform 0.7s ease;
-  text-shadow: var(--glow-sm);
+  transform: translateY(10px);
+  transition: opacity 0.8s ease, transform 0.8s ease;
 }
+#dynamics-text.show { opacity: 1; transform: translateY(0); }
 
-#logo-tagline.show {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-/* =============================================
-   SCENE 3 — MISSILE
-   ============================================= */
-#missile-wrap {
+/* ── MISSILE SCENE ── */
+#missile-inner {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 24px;
+  gap: 22px;
   opacity: 0;
-  transform: scale(0.96);
-  transition: opacity 1s ease, transform 1s ease;
+  transform: scale(0.97);
+  transition: opacity 1.1s ease, transform 1.1s ease;
 }
-
-#missile-wrap.show {
-  opacity: 1;
-  transform: scale(1);
-}
+#missile-inner.show { opacity: 1; transform: scale(1); }
 
 #missile-label {
-  font-family: 'Orbitron', monospace;
-  font-size: clamp(10px, 1.5vw, 13px);
+  font-size: clamp(9px, 1.3vw, 12px);
   letter-spacing: 8px;
-  color: var(--violet);
-  text-shadow: var(--glow-sm);
+  color: var(--cyan);
+  text-shadow: var(--glow-cyan);
 }
 
 #missile-frame {
   position: relative;
-  width: clamp(280px, 50vw, 700px);
-  height: clamp(200px, 35vh, 450px);
-  border: 1px solid #2a003a;
-  background: #03000a;
+  width: clamp(280px, 52vw, 720px);
+  height: clamp(200px, 36vh, 460px);
+  border: 1px solid #1a004a;
+  background: #02000a;
   overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
 }
-
-/* Corner accent brackets */
-#missile-frame::before,
+#missile-frame::before {
+  content:''; position:absolute;
+  top:-1px; left:-1px;
+  width:30px; height:30px;
+  border-top: 2px solid var(--cyan);
+  border-left: 2px solid var(--cyan);
+  box-shadow: var(--glow-cyan);
+}
 #missile-frame::after {
-  content: '';
-  position: absolute;
-  width: 28px; height: 28px;
-  border-color: var(--violet);
-  border-style: solid;
-  z-index: 2;
+  content:''; position:absolute;
+  bottom:-1px; right:-1px;
+  width:30px; height:30px;
+  border-bottom: 2px solid var(--fuchsia);
+  border-right: 2px solid var(--fuchsia);
+  box-shadow: var(--glow-fuchsia);
 }
-#missile-frame::before { top: -1px; left: -1px; border-width: 2px 0 0 2px; box-shadow: -4px -4px 14px #9D00FF66; }
-#missile-frame::after  { bottom: -1px; right: -1px; border-width: 0 2px 2px 0; box-shadow: 4px 4px 14px #9D00FF66; }
-
-#missile-canvas {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-}
-
-/* When you add real Blender video/image, style it: */
 #missile-frame video,
 #missile-frame img {
-  width: 100%;
-  height: 100%;
+  width: 100%; height: 100%;
   object-fit: contain;
-  position: relative;
-  z-index: 1;
-}
-
-#missile-placeholder-text {
-  position: relative;
-  z-index: 2;
-  font-family: 'Orbitron', monospace;
-  font-size: 11px;
-  letter-spacing: 3px;
-  color: #3a004a;
-  text-align: center;
-  line-height: 2;
-  pointer-events: none;
-}
-
-#missile-placeholder-text span {
-  color: #5a006a;
-  font-size: 9px;
-  letter-spacing: 2px;
 }
 
 #missile-specs {
   display: flex;
   align-items: center;
-  gap: 16px;
-  font-family: 'Orbitron', monospace;
-  font-size: clamp(8px, 1.2vw, 11px);
+  gap: 14px;
+  font-size: clamp(7px, 1vw, 10px);
   letter-spacing: 3px;
 }
+.spec     { color: #444; }
+.spec em  { font-style: normal; color: var(--cyan); margin-left: 7px; }
+.sdiv     { color: #1a004a; }
 
-.spec { color: #555; }
-.spec em { font-style: normal; color: var(--violet-mid); margin-left: 8px; }
-.spec-div { color: #2a003a; }
-
-/* =============================================
-   SCENE 4 — END CARD
-   ============================================= */
-#end-wrap {
+/* ── END CARD ── */
+#end-inner {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 14px;
+  gap: 20px;
   opacity: 0;
-  transition: opacity 1.2s ease;
+  transition: opacity 1.4s ease;
 }
+#end-inner.show { opacity: 1; }
 
-#end-wrap.show { opacity: 1; }
-
-#end-logo {
-  font-family: 'Orbitron', monospace;
+#end-xtr {
+  font-size: clamp(80px, 20vw, 220px);
   font-weight: 900;
-  font-size: clamp(52px, 12vw, 130px);
-  letter-spacing: -2px;
+  letter-spacing: -4px;
   line-height: 1;
 }
-
-.end-x  { color: var(--violet-pale); text-shadow: var(--glow-lg); }
-.end-tr {
-  color: var(--white);
-  font-size: 0.7em;
-  vertical-align: baseline;
-  margin-left: -4px;
-  text-shadow: 0 0 20px #BF5FFF66;
-}
-
-#end-brand {
-  font-family: 'Orbitron', monospace;
-  font-weight: 900;
-  font-size: clamp(12px, 3vw, 32px);
-  letter-spacing: clamp(8px, 2.5vw, 22px);
-  color: var(--white);
-  text-shadow: var(--glow-sm);
-}
-
-#end-line {
-  width: clamp(80px, 15vw, 160px);
-  height: 1px;
-  background: linear-gradient(90deg, transparent, var(--violet), transparent);
-  margin: 6px 0;
-}
-
-#end-copy {
-  font-family: 'Rajdhani', sans-serif;
-  font-size: clamp(12px, 2vw, 20px);
-  font-weight: 300;
-  letter-spacing: 6px;
-  color: var(--dim);
-}
+#end-x  { color: var(--cyan);   text-shadow: var(--glow-cyan);    }
+#end-tr { color: var(--fuchsia); text-shadow: var(--glow-fuchsia); font-size: 0.68em; vertical-align: baseline; margin-left: -6px; }
 
 #end-credit {
-  font-family: 'Orbitron', monospace;
-  font-size: clamp(7px, 1vw, 10px);
+  font-size: clamp(7px, 0.9vw, 10px);
   letter-spacing: 3px;
   color: #333;
-  margin-top: 10px;
+  margin-top: 8px;
 }
 
-/* =============================================
-   KEYFRAMES
-   ============================================= */
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.35; }
+/* ── KEYFRAMES ── */
+@keyframes blinkPulse {
+  0%,100% { opacity: 1; }
+  50%      { opacity: 0.3; }
 }
-
-@keyframes fadeIn { to { opacity: 1; } }

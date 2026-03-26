@@ -1,85 +1,71 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>XTR DYNAMICS</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@900&family=Rajdhani:wght@300;600&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="css/style.css"/>
 </head>
 <body>
-
   <div id="stage">
-    <canvas id="main-canvas"></canvas>
 
-    <div id="overlay">
+    <!-- MASTER BACKGROUND CANVAS -->
+    <canvas id="bg-canvas"></canvas>
 
-      <!-- SCENE 1: LOADER -->
-      <div class="scene" id="scene-loader">
-        <div id="loader-text">
-          <span class="loader-sub">INITIALIZING XTR DYNAMICS</span>
-          <div class="loader-bar-wrap"><div id="loader-bar"></div></div>
-        </div>
+    <!-- SCENE: LOADER -->
+    <div class="scene active" id="scene-loader">
+      <div id="loader-ui">
+        <span id="loader-label">INITIALIZING XTR DYNAMICS</span>
+        <div id="loader-bar-wrap"><div id="loader-bar"></div></div>
       </div>
-
-      <!-- SCENE 2: LOGO REVEAL -->
-      <div class="scene hidden" id="scene-logo">
-        <div id="logo-wrap">
-          <canvas id="logo-canvas"></canvas>
-          <div id="logo-tagline">DYNAMICS</div>
-        </div>
-      </div>
-
-      <!-- SCENE 3: MISSILE PROTOTYPE -->
-      <div class="scene hidden" id="scene-missile">
-        <div id="missile-wrap">
-          <div id="missile-label">PROTOTYPE — MK1</div>
-          <div id="missile-frame">
-            <!--
-              ASSET SLOT — Replace contents with your Blender export.
-
-              OPTION A — Rotating video (recommended):
-              <video id="missile-video" src="assets/video/missile-rotate.mp4"
-                     autoplay muted loop playsinline></video>
-
-              OPTION B — Static image: -->
-              <img id="missile-img" src="assets/images/image.png" alt="XTR MK1" />
-
-            <!--  Until assets are ready, placeholder canvas renders below.
-            -->
-            <canvas id="missile-canvas"></canvas>
-            <div id="missile-placeholder-text">
-              BLENDER EXPORT SLOT<br/>
-              <span>assets/video/missile-rotate.mp4</span>
-            </div>
-          </div>
-          <div id="missile-specs">
-            <span class="spec">DESIGNATION <em>XTR-MK1</em></span>
-            <span class="spec-div">|</span>
-            <span class="spec">CLASS <em>PROTOTYPE</em></span>
-            <span class="spec-div">|</span>
-            <span class="spec">STATUS <em>CLASSIFIED</em></span>
-          </div>
-        </div>
-      </div>
-
-      <!-- SCENE 4: END CARD -->
-      <div class="scene hidden" id="scene-end">
-        <div id="end-wrap">
-          <div id="end-logo">
-            <span class="end-x">X</span><span class="end-tr">TR</span>
-          </div>
-          <div id="end-brand">DYNAMICS</div>
-          <div id="end-line"></div>
-          <div id="end-copy">ENGINEERED FOR DOMINANCE</div>
-          <div id="end-credit">© REKOILE MEDIA PRODUCTIONS. ALL RIGHTS RESERVED.</div>
-        </div>
-      </div>
-
     </div>
-  </div>
 
+    <!-- SCENE: LOGO -->
+    <div class="scene" id="scene-logo">
+      <div id="logo-stage">
+        <canvas id="logo-canvas"></canvas>
+        <div id="dynamics-text">DYNAMICS</div>
+      </div>
+    </div>
+
+    <!-- SCENE: MISSILE (only shown if asset exists) -->
+    <div class="scene" id="scene-missile">
+      <div id="missile-inner">
+        <div id="missile-label">PROTOTYPE — MK1</div>
+        <div id="missile-frame">
+          <!--
+            REPLACE THIS COMMENT WITH YOUR BLENDER EXPORT:
+
+            Video (recommended):
+            <video src="assets/video/missile-rotate.mp4" autoplay muted loop playsinline></video>
+
+            Image:
+            <img src="assets/images/missile.png" alt="XTR MK1"/>
+          -->
+        </div>
+        <div id="missile-specs">
+          <span class="spec">DESIGNATION <em>XTR-MK1</em></span>
+          <span class="sdiv">|</span>
+          <span class="spec">CLASS <em>PROTOTYPE</em></span>
+          <span class="sdiv">|</span>
+          <span class="spec">STATUS <em>CLASSIFIED</em></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCENE: END CARD -->
+    <div class="scene" id="scene-end">
+      <div id="end-inner">
+        <div id="end-xtr">
+          <span id="end-x">X</span><span id="end-tr">TR</span>
+        </div>
+        <div id="end-credit">© REKOILE MEDIA PRODUCTIONS. ALL RIGHTS RESERVED.</div>
+      </div>
+    </div>
+
+  </div>
   <script src="js/ad.js"></script>
 </body>
 </html>
