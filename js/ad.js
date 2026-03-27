@@ -1,16 +1,16 @@
 /**
- * XTR DYNAMICS — AD ENGINE v6
+ * XTR DYNAMICS — AD ENGINE v5
  *
- * PATTERN: Looping oval clusters exactly like the sketch —
- * each "node" is a figure-8 / oval loop drawn continuously,
- * exit stroke connects to the next node. Starts from both
- * bottom corners, rapidly chains upward and across screen.
+ * PATTERN: Mehndi coil system — tight spiraling loops that feed into
+ * each other, expanding rapidly from both bottom corners simultaneously.
+ * Each coil spawns the next coil from its tip, slightly rotated and
+ * scaled, building an interlocking ornate pattern that consumes the screen.
  *
  * SEQUENCE:
- *  0s      Loop clusters explode from bottom-left + bottom-right
- *  ~2.5s   X drawn as two crossing slash strokes (same energy)
- *  ~3.8s   TR + DYNAMICS text appear
- *  ~12s    Fade → end card → hard reload
+ *  0s      Coils explode from bottom-left and bottom-right corners
+ *  ~2.5s   XTR slashes in while coils still growing
+ *  ~3.8s   TR + DYNAMICS appear with X as one unit
+ *  ~12s    Fade out → missile (if asset) → end card → hard reload
  */
 
 (function () {
@@ -20,7 +20,7 @@ const P = {
   CYAN:    '#00FFFF',
   FUCHSIA: '#FF00FF',
   VIOLET:  '#9D00FF',
-  VPALE:   '#CC88FF',
+  VPALE:   '#E0AAFF',
   GREEN:   '#00FF88',
 };
 
@@ -42,6 +42,7 @@ const sceneEnd    = document.getElementById('scene-end');
 const endInner    = document.getElementById('end-inner');
 
 let W = 0, H = 0;
+
 function resize() {
   W = venomCanvas.width = logoCanvas.width  = window.innerWidth;
   H = venomCanvas.height= logoCanvas.height = window.innerHeight;
@@ -64,6 +65,7 @@ const easeOut = t => 1-Math.pow(1-t,3);
 const rand    = (a,b) => a+Math.random()*(b-a);
 const TAU     = Math.PI*2;
 
+/* ─── MISSILE CHECK ───────────────────── */
 function hasMissile() {
   return !!(missileFrame.querySelector('video[src]') ||
             missileFrame.querySelector('img[src]'));
@@ -71,234 +73,201 @@ function hasMissile() {
 const MISSILE = hasMissile();
 
 /* ═══════════════════════════════════════════════════════
-   OVAL LOOP CLUSTER SYSTEM
+   MEHNDI COIL SYSTEM
 
-   Each "OvalNode" draws a looping oval (or figure-8) —
-   exactly like the sketch shows. The oval is drawn as a
-   continuous parametric curve. When done, it fires a
-   connector stroke to the next node's anchor, then
-   the next node starts drawing its oval.
+   Each CoilChain starts at a corner.
+   A CoilChain is a sequence of Coils — each Coil is a
+   spiral arc (parametric Archimedean-style) that draws
+   from its anchor point. When a coil finishes, it spawns
+   the next coil from its exit tip, rotated and at a new
+   scale, feeding the pattern across the screen.
 
-   OvalNode math:
-     A tilted ellipse drawn continuously:
-     x(t) = cx + rx*cos(t)*cos(tilt) - ry*sin(t)*sin(tilt)
-     y(t) = cy + rx*cos(t)*sin(tilt) + ry*sin(t)*cos(tilt)
+   Coil math:
+     For t in [0, turns*TAU]:
+       r(t) = startR + growthRate * t
+       x = anchor.x + r(t) * cos(t + phaseOffset)
+       y = anchor.y + r(t) * sin(t + phaseOffset)
 
-   Chains spread from bottom corners upward,
-   each node positioned relative to parent exit point
-   + a random offset that biases upward/inward.
+   Each coil draws stroke-by-stroke so you see it grow.
+   After finishing, it immediately spawns its child coil
+   from the exit point, with a new anchor direction.
 ═══════════════════════════════════════════════════════ */
 
-const PALETTE = [P.CYAN, P.FUCHSIA, P.VIOLET, P.VPALE, P.GREEN];
-
-class OvalNode {
-  constructor(cx, cy, rx, ry, tilt, col, lw, loops=1.3) {
-    this.cx   = cx;
-    this.cy   = cy;
-    this.rx   = rx;     // semi-major
-    this.ry   = ry;     // semi-minor
-    this.tilt = tilt;   // rotation of oval
-    this.col  = col;
-    this.lw   = lw;
-    this.loops= loops;  // how many times it wraps (1–2.5)
-    this.maxT = loops * TAU;
-    this.t    = 0;
-    this.speed= 0.22 + Math.random()*0.18; // fast drawing
-    this.done = false;
-    this.child= null;
-    this.connDone = false;
-    this.connT    = 0;
-    this.connPts  = null; // [{x,y}] connector path to child
+class Coil {
+  constructor(ax, ay, startAngle, startR, growth, turns, col, lw, direction=1) {
+    this.ax       = ax;           // anchor x
+    this.ay       = ay;           // anchor y
+    this.startA   = startAngle;   // phase offset
+    this.startR   = startR;       // inner radius
+    this.growth   = growth;       // how much r grows per radian
+    this.turns    = turns;        // how many loops
+    this.col      = col;
+    this.lw       = lw;
+    this.dir      = direction;    // 1=CCW, -1=CW
+    this.maxT     = turns * TAU;
+    this.t        = 0;
+    this.speed    = 0.18 + Math.random()*0.14; // radians per frame — fast
+    this.done     = false;
+    this.child    = null;
+    this.points   = [];
     this.precompute();
   }
 
   precompute() {
+    // Pre-build all points for fast drawing
     this.pts = [];
-    const steps = Math.ceil(this.maxT / 0.05);
+    const steps = Math.ceil(this.maxT / 0.06);
     for (let i = 0; i <= steps; i++) {
-      const t  = (i/steps)*this.maxT;
-      const ct = Math.cos(t), st = Math.sin(t);
-      const tl = this.tilt;
+      const tt = (i/steps)*this.maxT;
+      const r  = this.startR + this.growth*tt;
       this.pts.push({
-        x: this.cx + this.rx*ct*Math.cos(tl) - this.ry*st*Math.sin(tl),
-        y: this.cy + this.rx*ct*Math.sin(tl) + this.ry*st*Math.cos(tl),
+        x: this.ax + r*Math.cos(this.dir*tt + this.startA),
+        y: this.ay + r*Math.sin(this.dir*tt + this.startA),
       });
     }
+    // Exit point = last point
     this.exitPt = this.pts[this.pts.length-1];
   }
 
-  // Compute where the child anchor will be
-  // Bias: upward + spread left/right from current position
-  childAnchor() {
-    const spread   = rand(-1.4, 1.4);
-    const upBias   = rand(0.5, 1.6);
-    const diagX    = this.exitPt.x + spread * (this.rx * rand(1.2, 2.5));
-    const diagY    = this.exitPt.y - upBias * (this.ry * rand(1.0, 2.2));
-    return { x: diagX, y: diagY };
-  }
-
-  spawnChild() {
-    if (!this.exitPt) return;
-    const anchor = this.childAnchor();
-
-    // Stop if way off screen
-    if (anchor.x < -W*0.2 || anchor.x > W*1.2) return;
-    if (anchor.y < -H*0.15) return;
-
-    const scale  = rand(0.65, 1.25);
-    const newRX  = this.rx * scale;
-    const newRY  = this.ry * scale * rand(0.55, 1.0);
-    const newTilt= this.tilt + rand(-0.9, 0.9);
-    const newCol = PALETTE[Math.floor(Math.random()*PALETTE.length)];
-    const newLW  = Math.max(0.5, this.lw * rand(0.7, 1.05));
-    const newLoops=rand(1.1, 2.4);
-
-    this.child = new OvalNode(anchor.x, anchor.y, newRX, newRY, newTilt, newCol, newLW, newLoops);
-
-    // Build connector path (bezier-ish: 3 points)
-    this.connPts = [
-      this.exitPt,
-      { x: lerp(this.exitPt.x, anchor.x, 0.5) + rand(-30,30),
-        y: lerp(this.exitPt.y, anchor.y, 0.5) + rand(-20,20) },
-      anchor,
-    ];
-    this.connSpeed = 0.06 + Math.random()*0.08;
-  }
-
   update() {
-    if (!this.done) {
-      this.t = Math.min(this.t + this.speed, this.maxT);
-      if (this.t >= this.maxT) {
-        this.done = true;
-        this.spawnChild();
-      }
-    } else if (!this.connDone && this.connPts) {
-      this.connT = Math.min(this.connT + this.connSpeed, 1);
-      if (this.connT >= 1) { this.connDone = true; }
+    if (this.done) { if(this.child) this.child.update(); return; }
+    this.t = Math.min(this.t + this.speed, this.maxT);
+    if (this.t >= this.maxT) {
+      this.done = true;
+      this.spawnChild();
     }
     if (this.child) this.child.update();
   }
 
-  draw(ctx, ga) {
-    if (this.pts.length < 2) { if(this.child) this.child.draw(ctx,ga); return; }
-    const drawn = Math.max(2, Math.floor((this.t/this.maxT)*this.pts.length));
+  spawnChild() {
+    if (!this.exitPt) return;
+    // Next coil starts where this one ended
+    // Rotate phase by ~90°–150°, scale radius slightly
+    const newAngle  = this.startA + rand(0.8, 1.8) * this.dir;
+    const newStartR = rand(2, 6);
+    const newGrowth = this.growth * rand(0.7, 1.2);
+    const newTurns  = rand(1.2, 3.0);
+    const newDir    = Math.random() < 0.35 ? -this.dir : this.dir;
+    const cols      = [P.CYAN, P.FUCHSIA, P.VIOLET, P.VPALE, P.GREEN];
+    const newCol    = cols[Math.floor(Math.random()*cols.length)];
+    const newLW     = Math.max(0.4, this.lw * rand(0.6,0.95));
 
-    // Glow
+    // Clamp exit point — don't let coils go off-screen
+    const ex = clamp(this.exitPt.x, -W*0.1, W*1.1);
+    const ey = clamp(this.exitPt.y, -H*0.1, H*1.1);
+
+    // Stop spawning if we've gone very far off screen
+    if (ex < -W*0.15 || ex > W*1.15 || ey < -H*0.15 || ey > H*1.15) return;
+
+    this.child = new Coil(ex, ey, newAngle, newStartR, newGrowth, newTurns, newCol, newLW, newDir);
+  }
+
+  draw(ctx, globalAlpha) {
+    if (this.pts.length < 2) return;
+    const drawn = Math.floor((this.t/this.maxT)*this.pts.length);
+    if (drawn < 2) { if(this.child) this.child.draw(ctx, globalAlpha); return; }
+
+    // Glow pass
     ctx.save();
     ctx.beginPath();
     ctx.moveTo(this.pts[0].x, this.pts[0].y);
     for (let i=1;i<drawn;i++) ctx.lineTo(this.pts[i].x, this.pts[i].y);
     ctx.strokeStyle = this.col;
-    ctx.lineWidth   = this.lw + 4;
-    ctx.globalAlpha = 0.15 * ga;
+    ctx.lineWidth   = this.lw + 3;
+    ctx.globalAlpha = 0.18 * globalAlpha;
     ctx.shadowColor = this.col;
-    ctx.shadowBlur  = 22;
-    ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    ctx.shadowBlur  = 20;
+    ctx.lineCap     = 'round';
+    ctx.lineJoin    = 'round';
     ctx.stroke();
     ctx.restore();
 
-    // Core
+    // Core line
     ctx.save();
     ctx.beginPath();
     ctx.moveTo(this.pts[0].x, this.pts[0].y);
     for (let i=1;i<drawn;i++) ctx.lineTo(this.pts[i].x, this.pts[i].y);
     ctx.strokeStyle = this.col;
     ctx.lineWidth   = this.lw;
-    ctx.globalAlpha = ga * 0.85;
+    ctx.globalAlpha = globalAlpha * 0.88;
     ctx.shadowColor = this.col;
-    ctx.shadowBlur  = 9;
-    ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    ctx.shadowBlur  = 8;
+    ctx.lineCap     = 'round';
+    ctx.lineJoin    = 'round';
     ctx.stroke();
     ctx.restore();
 
-    // Live tip dot
+    // Active tip dot
     if (!this.done && drawn > 0) {
-      const tip = this.pts[Math.min(drawn-1, this.pts.length-1)];
+      const tip = this.pts[drawn-1];
       ctx.save();
-      ctx.beginPath(); ctx.arc(tip.x, tip.y, this.lw+1.5, 0, TAU);
-      ctx.fillStyle = '#fff'; ctx.globalAlpha = 0.9*ga;
-      ctx.shadowColor = this.col; ctx.shadowBlur = 20;
-      ctx.fill(); ctx.restore();
-    }
-
-    // Connector stroke to child
-    if (this.connPts && this.connT > 0) {
-      const cPts = this.connPts;
-      const t    = this.connT;
-      // Quadratic bezier sample up to t
-      const steps = 20;
-      ctx.save();
-      ctx.beginPath();
-      ctx.moveTo(cPts[0].x, cPts[0].y);
-      for (let i=1; i<=Math.floor(steps*t); i++) {
-        const tt = i/steps;
-        const mt = 1-tt;
-        const bx = mt*mt*cPts[0].x + 2*mt*tt*cPts[1].x + tt*tt*cPts[2].x;
-        const by = mt*mt*cPts[0].y + 2*mt*tt*cPts[1].y + tt*tt*cPts[2].y;
-        ctx.lineTo(bx, by);
-      }
-      ctx.strokeStyle = this.col;
-      ctx.lineWidth   = this.lw * 0.7;
-      ctx.globalAlpha = ga * 0.65;
+      ctx.beginPath(); ctx.arc(tip.x, tip.y, this.lw+1, 0, TAU);
+      ctx.fillStyle   = '#fff';
+      ctx.globalAlpha = 0.9 * globalAlpha;
       ctx.shadowColor = this.col;
-      ctx.shadowBlur  = 10;
-      ctx.lineCap = 'round';
-      ctx.stroke();
+      ctx.shadowBlur  = 18;
+      ctx.fill();
       ctx.restore();
     }
 
-    if (this.child) this.child.draw(ctx, ga);
+    if (this.child) this.child.draw(ctx, globalAlpha);
   }
 }
 
-/* ─── SEED CHAINS ─────────────────────── */
+/* ─── COIL CHAINS from each corner ─────── */
+// Each corner spawns multiple seed coils at different angles
+// so the pattern fans out and covers the screen fast
+
 let chains = [];
 let patternAlpha = 1;
-const UNIT = () => Math.min(W,H) * 0.058;
 
 function initPattern() {
   chains = [];
   patternAlpha = 1;
-  const u = UNIT();
 
-  // Bottom-left corner — fan of seeds
-  const blSeeds = [
-    { x:rand(10,40),  y:H-rand(10,40),  tilt:-0.3,  col:P.CYAN    },
-    { x:rand(30,70),  y:H-rand(5,25),   tilt: 0.5,  col:P.FUCHSIA },
-    { x:rand(5,30),   y:H-rand(30,60),  tilt:-0.9,  col:P.VIOLET  },
-    { x:rand(60,100), y:H-rand(20,50),  tilt: 0.2,  col:P.VPALE   },
-    { x:rand(15,50),  y:H-rand(50,90),  tilt:-0.6,  col:P.GREEN   },
-  ];
+  const baseR   = Math.min(W,H)*0.012;
+  const growth  = Math.min(W,H)*0.0028;
 
-  // Bottom-right corner — mirror fan
-  const brSeeds = [
-    { x:W-rand(10,40),  y:H-rand(10,40),  tilt: Math.PI+0.3,  col:P.FUCHSIA },
-    { x:W-rand(30,70),  y:H-rand(5,25),   tilt: Math.PI-0.5,  col:P.CYAN    },
-    { x:W-rand(5,30),   y:H-rand(30,60),  tilt: Math.PI+0.9,  col:P.VIOLET  },
-    { x:W-rand(60,100), y:H-rand(20,50),  tilt: Math.PI-0.2,  col:P.GREEN   },
-    { x:W-rand(15,50),  y:H-rand(50,90),  tilt: Math.PI+0.6,  col:P.VPALE   },
-  ];
+  // ── BOTTOM LEFT corner ──
+  const blx = 0, bly = H;
+  const blAngles = [-Math.PI*0.5, -Math.PI*0.35, -Math.PI*0.65, -Math.PI*0.2, -Math.PI*0.8];
+  const blCols   = [P.CYAN, P.FUCHSIA, P.VIOLET, P.CYAN, P.VPALE];
+  blAngles.forEach((ang, i) => {
+    chains.push(new Coil(
+      blx + rand(-10,20), bly + rand(-10,15),
+      ang, baseR * rand(0.5,1.5),
+      growth * rand(0.8,1.3),
+      rand(1.8, 3.2),
+      blCols[i % blCols.length],
+      rand(0.8, 2.0),
+      i%2===0 ? 1 : -1
+    ));
+  });
 
-  [...blSeeds, ...brSeeds].forEach(s => {
-    chains.push(new OvalNode(
-      s.x, s.y,
-      u * rand(0.7,1.4),
-      u * rand(0.4,0.9),
-      s.tilt,
-      s.col,
-      rand(0.9, 2.2),
-      rand(1.2, 2.2)
+  // ── BOTTOM RIGHT corner ──
+  const brx = W, bry = H;
+  const brAngles = [-Math.PI*0.5, -Math.PI*0.65, -Math.PI*0.35, -Math.PI*0.8, -Math.PI*0.2];
+  const brCols   = [P.FUCHSIA, P.CYAN, P.GREEN, P.VIOLET, P.VPALE];
+  brAngles.forEach((ang, i) => {
+    chains.push(new Coil(
+      brx + rand(-20,10), bry + rand(-10,15),
+      ang, baseR * rand(0.5,1.5),
+      growth * rand(0.8,1.3),
+      rand(1.8, 3.2),
+      brCols[i % brCols.length],
+      rand(0.8, 2.0),
+      i%2===0 ? -1 : 1
     ));
   });
 }
 
-function updatePattern() { chains.forEach(c => c.update()); }
-function drawPattern()   { chains.forEach(c => c.draw(vCtx, patternAlpha)); }
+function updatePattern() { chains.forEach(c=>c.update()); }
+function drawPattern()   { chains.forEach(c=>c.draw(vCtx, patternAlpha)); }
 
 initPattern();
 
 /* ═══════════════════════════════════════════════════════
-   LOGO — X dual stab
+   LOGO — X dual simultaneous stab, then TR + DYNAMICS
 ═══════════════════════════════════════════════════════ */
 function G() {
   const cx=W/2, cy=H/2;
@@ -306,20 +275,25 @@ function G() {
   const xl=cx-u*0.9;
   return {
     X:{
-      s1:{x1:xl-u*0.58, y1:cy-u*0.82, x2:xl+u*0.58, y2:cy+u*0.82},
-      s2:{x1:xl+u*0.58, y1:cy-u*0.82, x2:xl-u*0.58, y2:cy+u*0.82},
+      s1:{x1:xl-u*0.58,y1:cy-u*0.82,x2:xl+u*0.58,y2:cy+u*0.82},
+      s2:{x1:xl+u*0.58,y1:cy-u*0.82,x2:xl-u*0.58,y2:cy+u*0.82},
     }
   };
 }
 
 const LS = { phase:'idle', x1t:0, x2t:0, x1tr:[], x2tr:[] };
 
-function drawSlash(x1,y1,x2,y2,t,tr,col,gc) {
-  const et = easeOut(clamp(t,0,1));
-  const ex = lerp(x1,x2,et), ey = lerp(y1,y2,et);
-  tr.push({x:ex,y:ey}); if(tr.length>20) tr.shift();
+function resetLogo() {
+  Object.assign(LS,{phase:'idle',x1t:0,x2t:0,x1tr:[],x2tr:[]});
+  lCtx.clearRect(0,0,W,H);
+}
 
-  // Fuchsia trail
+function drawSlash(x1,y1,x2,y2,t,tr,col,gc) {
+  const et=easeOut(clamp(t,0,1));
+  const ex=lerp(x1,x2,et), ey=lerp(y1,y2,et);
+  tr.push({x:ex,y:ey}); if(tr.length>18)tr.shift();
+
+  // Trail
   for(let i=1;i<tr.length;i++){
     const a=i/tr.length;
     lCtx.save();
@@ -329,29 +303,32 @@ function drawSlash(x1,y1,x2,y2,t,tr,col,gc) {
     lCtx.globalAlpha=a*0.5; lCtx.shadowColor=P.FUCHSIA; lCtx.shadowBlur=10;
     lCtx.stroke(); lCtx.restore();
   }
-  // Main stroke
+
+  // Stroke
   lCtx.save();
   lCtx.beginPath(); lCtx.moveTo(x1,y1); lCtx.lineTo(ex,ey);
-  lCtx.strokeStyle=col; lCtx.lineWidth=3.2;
-  lCtx.shadowColor=gc; lCtx.shadowBlur=28; lCtx.lineCap='round';
+  lCtx.strokeStyle=col; lCtx.lineWidth=3;
+  lCtx.shadowColor=gc; lCtx.shadowBlur=26; lCtx.lineCap='round';
   lCtx.stroke(); lCtx.restore();
+
   // Tip spark
   if(t<1){
     lCtx.save();
     lCtx.beginPath(); lCtx.arc(ex,ey,4,0,TAU);
     lCtx.fillStyle='#fff'; lCtx.globalAlpha=0.95;
-    lCtx.shadowColor=col; lCtx.shadowBlur=34;
+    lCtx.shadowColor=col; lCtx.shadowBlur=32;
     lCtx.fill(); lCtx.restore();
   }
+
   // Settled glow
   if(t>=1){
     lCtx.save();
     lCtx.beginPath(); lCtx.moveTo(x1,y1); lCtx.lineTo(x2,y2);
-    lCtx.strokeStyle=gc; lCtx.lineWidth=9; lCtx.globalAlpha=0.28;
-    lCtx.shadowColor=gc; lCtx.shadowBlur=32; lCtx.stroke(); lCtx.restore();
+    lCtx.strokeStyle=gc; lCtx.lineWidth=8; lCtx.globalAlpha=0.3;
+    lCtx.shadowColor=gc; lCtx.shadowBlur=30; lCtx.stroke(); lCtx.restore();
     lCtx.save();
     lCtx.beginPath(); lCtx.moveTo(x1,y1); lCtx.lineTo(x2,y2);
-    lCtx.strokeStyle=col; lCtx.lineWidth=1.8; lCtx.globalAlpha=0.92;
+    lCtx.strokeStyle=col; lCtx.lineWidth=1.6; lCtx.globalAlpha=0.92;
     lCtx.shadowColor=col; lCtx.shadowBlur=14; lCtx.stroke(); lCtx.restore();
   }
 }
@@ -372,15 +349,15 @@ function tickLogo() {
    TIMELINE
 ═══════════════════════════════════════════════════════ */
 const TL = {
-  LOGO_START:  2400,
-  BRAND_SHOW:  3700,
-  BRAND_FADE:  12200,
-  PAT_FADE:    12600,
-  MISSILE_IN:  14500,
-  MISSILE_OUT: 99000,
-  END_IN:      MISSILE ? 100200 : 14500,
-  END_HOLD:    MISSILE ? 113000 : 27500,
-  RELOAD:      MISSILE ? 115500 : 30000,
+  LOGO_START:   2400,
+  BRAND_SHOW:   3700,
+  BRAND_FADE:   12200,
+  VENOM_FADE:   12600,
+  MISSILE_IN:   14500,
+  MISSILE_OUT:  99000,
+  END_IN:       MISSILE ? 100200 : 14500,
+  END_HOLD:     MISSILE ? 113000 : 27500,
+  HARD_RELOAD:  MISSILE ? 115500 : 30000,
 };
 
 let startT=null, flags={};
@@ -389,15 +366,23 @@ function frame(ts) {
   if(!startT) startT=ts;
   const e=ts-startT;
 
+  // Pattern — update + draw every frame
   vCtx.clearRect(0,0,W,H);
   updatePattern();
   drawPattern();
+
+  // Logo
   tickLogo();
 
-  if(e>=TL.LOGO_START && !flags.ls){ flags.ls=true; LS.phase='x'; }
+  // Start X slashes
+  if(e>=TL.LOGO_START && !flags.logoStart){
+    flags.logoStart=true;
+    LS.phase='x';
+  }
 
-  if(e>=TL.BRAND_SHOW && !flags.bs){
-    flags.bs=true;
+  // Brand unit: X dom text + TR + DYNAMICS
+  if(e>=TL.BRAND_SHOW && !flags.brandShow){
+    flags.brandShow=true;
     brandUnit.classList.add('show');
     requestAnimationFrame(()=>{
       brandX.classList.add('slash-in');
@@ -405,46 +390,56 @@ function frame(ts) {
     });
   }
 
-  if(e>=TL.BRAND_FADE && !flags.bf){
-    flags.bf=true;
-    brandUnit.style.transition='opacity 1s ease'; brandUnit.style.opacity='0';
-    logoCanvas.style.transition='opacity 1s ease'; logoCanvas.style.opacity='0';
+  // Fade brand + logo canvas
+  if(e>=TL.BRAND_FADE && !flags.brandFade){
+    flags.brandFade=true;
+    brandUnit.style.transition='opacity 1s ease';
+    brandUnit.style.opacity='0';
+    logoCanvas.style.transition='opacity 1s ease';
+    logoCanvas.style.opacity='0';
   }
 
-  if(e>=TL.PAT_FADE && !flags.pf){
-    flags.pf=true;
-    const fs=ts, fd=1300;
+  // Fade pattern
+  if(e>=TL.VENOM_FADE && !flags.venomFade){
+    flags.venomFade=true;
+    const fs=ts, fd=1300, sa=patternAlpha;
     (function fade(now){
-      patternAlpha=lerp(1,0,easeOut(clamp((now-fs)/fd,0,1)));
-      if(patternAlpha>0) requestAnimationFrame(fade);
+      const ft=clamp((now-fs)/fd,0,1);
+      patternAlpha=lerp(sa,0,easeOut(ft));
+      if(ft<1) requestAnimationFrame(fade);
     })(ts);
   }
 
+  // Missile
   if(MISSILE){
-    if(e>=TL.MISSILE_IN && !flags.mi){
-      flags.mi=true;
+    if(e>=TL.MISSILE_IN && !flags.missileIn){
+      flags.missileIn=true;
       sceneMissile.classList.add('show');
       setTimeout(()=>missileInner.classList.add('show'),200);
     }
-    if(e>=TL.MISSILE_OUT && !flags.mo){
-      flags.mo=true;
-      missileInner.style.transition='opacity 1s ease'; missileInner.style.opacity='0';
+    if(e>=TL.MISSILE_OUT && !flags.missileOut){
+      flags.missileOut=true;
+      missileInner.style.transition='opacity 1s ease';
+      missileInner.style.opacity='0';
       setTimeout(()=>sceneMissile.classList.remove('show'),1100);
     }
   }
 
-  if(e>=TL.END_IN && !flags.ei){
-    flags.ei=true;
+  // End card
+  if(e>=TL.END_IN && !flags.endIn){
+    flags.endIn=true;
     sceneEnd.classList.add('show');
     setTimeout(()=>endInner.classList.add('show'),200);
   }
-  if(e>=TL.END_HOLD && !flags.eh){
-    flags.eh=true;
-    endInner.style.transition='opacity 1.2s ease'; endInner.style.opacity='0';
+  if(e>=TL.END_HOLD && !flags.endFade){
+    flags.endFade=true;
+    endInner.style.transition='opacity 1.2s ease';
+    endInner.style.opacity='0';
     setTimeout(()=>{ sceneEnd.style.transition='opacity 1.2s ease'; sceneEnd.style.opacity='0'; },100);
   }
 
-  if(e>=TL.RELOAD){ location.reload(); return; }
+  // HARD RELOAD
+  if(e>=TL.HARD_RELOAD){ location.reload(); return; }
 
   requestAnimationFrame(frame);
 }
