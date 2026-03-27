@@ -78,12 +78,12 @@ class OvalNode {
   }
 
   childAnchor(){
-    const spread = rand(-1.2,1.2);
-    const up     = rand(1.4,2.4);
+    const spread = rand(-2.6,2.6);
+    const up     = rand(3.0,5.4);
 
     return {
-      x: this.exitPt.x + spread * this.rx * 2.4,
-      y: this.exitPt.y - up * this.ry * 2.6
+      x: this.exitPt.x + spread * this.rx * 2.8,
+      y: this.exitPt.y - up * this.ry * 3.2
     };
   }
 
